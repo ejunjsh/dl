@@ -4,7 +4,7 @@
 
 # install
 
-    go get https://github.com/ejunjsh/dl
+    go get github.com/ejunjsh/dl
 
 # usage
 
