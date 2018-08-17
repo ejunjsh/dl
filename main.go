@@ -30,7 +30,7 @@ func main()  {
 				select{
 					case <-ticker.C:
 						for _,t:=range ts{
-							log.Printf("downloaded %d(%.2f)\n",t.getReadNum(),t.getBps())
+							log.Printf("downloaded %s(%s/s)\n",formatBytes(t.getReadNum()),formatBytes(int64(t.getBps())))
 						}
 				}
 			}
