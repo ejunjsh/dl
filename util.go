@@ -1,26 +1,56 @@
 package main
 
-import 	"fmt"
+import (
+	"fmt"
+	"net/http"
+	"mime"
+	"strings"
+	"path/filepath"
+	"path"
+	"errors"
+)
 
 const (
-	_KiB = 1024
-	_MiB = 1048576
-	_GiB = 1073741824
-	_TiB = 1099511627776
+	kib = 1024
+	mib = 1048576
+	gib = 1073741824
+	tib = 1099511627776
 )
 
 func formatBytes(i int64) (result string) {
 	switch {
-	case i >= _TiB:
-		result = fmt.Sprintf("%.02f TiB", float64(i)/_TiB)
-	case i >= _GiB:
-		result = fmt.Sprintf("%.02f GiB", float64(i)/_GiB)
-	case i >= _MiB:
-		result = fmt.Sprintf("%.02f MiB", float64(i)/_MiB)
-	case i >= _KiB:
-		result = fmt.Sprintf("%.02f KiB", float64(i)/_KiB)
+	case i >= tib:
+		result = fmt.Sprintf("%.02f TiB", float64(i)/tib)
+	case i >= gib:
+		result = fmt.Sprintf("%.02f GiB", float64(i)/gib)
+	case i >= mib:
+		result = fmt.Sprintf("%.02f MiB", float64(i)/mib)
+	case i >= kib:
+		result = fmt.Sprintf("%.02f KiB", float64(i)/kib)
 	default:
 		result = fmt.Sprintf("%d B", i)
 	}
 	return
+}
+
+var errNoFilename=errors.New("no filename could be determined")
+
+func guessFilename(resp *http.Response) (string, error) {
+	filename := resp.Request.URL.Path
+	if cd := resp.Header.Get("Content-Disposition"); cd != "" {
+		if _, params, err := mime.ParseMediaType(cd); err == nil {
+			filename = params["filename"]
+		}
+	}
+
+	if filename == "" || strings.HasSuffix(filename, "/") || strings.Contains(filename, "\x00") {
+		return "", errNoFilename
+	}
+
+	filename = filepath.Base(path.Clean("/" + filename))
+	if filename == "" || filename == "." || filename == "/" {
+		return "", errNoFilename
+	}
+
+	return filename, nil
 }

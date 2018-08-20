@@ -31,7 +31,10 @@ func (c *client) do(req *http.Request) *task{
 		log.Printf("wrong response %d \n",rep.StatusCode)
 		return nil
 	}
-	dst,err:=os.Create("xxx")
+
+	filename, err := guessFilename(rep)
+
+	dst,err:=os.Create(filename)
 	if err!=nil{
 		log.Println(err)
 		return nil

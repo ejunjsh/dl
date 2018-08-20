@@ -4,8 +4,8 @@ import (
 	"os"
 	"fmt"
 	"net/http"
-	"log"
 	"time"
+	"io"
 )
 
 func main()  {
@@ -23,6 +23,7 @@ func main()  {
 			}
 		}
 
+
 		ticker:=time.NewTicker(200*time.Millisecond)
 
 		go func() {
@@ -30,7 +31,7 @@ func main()  {
 				select{
 					case <-ticker.C:
 						for _,t:=range ts{
-							log.Printf("downloaded %s(%s/s)\n",formatBytes(t.getReadNum()),formatBytes(int64(t.getBps())))
+							fmt.Printf("Downloaded %s(%s/s)\n",formatBytes(t.getReadNum()),formatBytes(int64(t.getBps())))
 						}
 				}
 			}
@@ -39,7 +40,11 @@ func main()  {
 		for _,t:=range ts{
 			if t!=nil{
 				<-t.done
-				log.Println(t.err)
+				if t.err!=nil&&t.err!=io.EOF{
+					fmt.Println(t.err)
+				} else {
+					fmt.Println("finished")
+				}
 			}
 		}
 	}
