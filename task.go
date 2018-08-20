@@ -5,6 +5,10 @@ import (
 	"time"
 	"sync"
 	"sync/atomic"
+	"os"
+	"net/http"
+	"errors"
+	"fmt"
 )
 
 type task struct {
@@ -20,6 +24,7 @@ type task struct {
 	fileSize int64
 	filename string
 	buffer []byte
+	client *client
 }
 
 func (t *task) getReadNum() int64{
@@ -29,16 +34,39 @@ func (t *task) getReadNum() int64{
 	return atomic.LoadInt64(&t.readNum)
 }
 
-func (t *task) start(){
+func newTask(url string) *task{
+	return &task{client:newClient(url),done:make(chan struct{},1),buffer:make([]byte,32*1024)}
+}
 
+func (t *task) start(){
+	var dst *os.File
 	var rn,wn int
+	var filename string
+	req,_:= http.NewRequest("GET",t.client.url,nil)
+	rep,err:= t.client._client.Do(req)
+	if err!=nil{
+		goto done
+	}else if rep.StatusCode!=200{
+		err=errors.New(fmt.Sprintf("wrong response %d",rep.StatusCode))
+		goto done
+	}
+
+	filename, err = guessFilename(rep)
+
+	dst,err=os.Create(filename)
+	if err!=nil{
+		goto done
+	}
+	t.dst=dst
+	t.src=rep.Body
+	t.fileSize=rep.ContentLength
 
 	go t.bps()
 
 	t.startTime=time.Now()
 
 loop:
-	rn,err:=t.src.Read(t.buffer)
+	rn,err=t.src.Read(t.buffer)
 
 	if err!=nil||rn==0{
 		goto done

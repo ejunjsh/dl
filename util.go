@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"path"
 	"errors"
+	"regexp"
+	"gopkg.in/mattn/go-runewidth.v0"
 )
 
 const (
@@ -33,6 +35,29 @@ func formatBytes(i int64) (result string) {
 	return
 }
 
+func formatTime(i int64) string{
+	if i<60{
+		return fmt.Sprintf("%2ds",i)
+	}else if i<3600{
+		s:=i%60
+		m:=i/60
+		if s==0{
+			return fmt.Sprintf("%2dm",m)
+		} else {
+			return fmt.Sprintf("%2dm ",m)+formatTime(s)
+		}
+
+	}else {
+		s:=i%3600
+		h:=i/3600
+		if s==0{
+			return fmt.Sprintf("%2dh",h)
+		} else {
+			return fmt.Sprintf("%2dh ",h)+formatTime(s)
+		}
+	}
+}
+
 var errNoFilename=errors.New("no filename could be determined")
 
 func guessFilename(resp *http.Response) (string, error) {
@@ -53,4 +78,14 @@ func guessFilename(resp *http.Response) (string, error) {
 	}
 
 	return filename, nil
+}
+
+var ctrlFinder = regexp.MustCompile("\x1b\x5b[0-9]+\x6d")
+
+func cellCount(s string) int {
+	n := runewidth.StringWidth(s)
+	for _, sm := range ctrlFinder.FindAllString(s, -1) {
+		n -= runewidth.StringWidth(sm)
+	}
+	return n
 }
