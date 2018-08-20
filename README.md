@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ejunjsh/dl.svg?branch=master)](https://travis-ci.org/ejunjsh/dl)
 
-a conccurent downloader
+a concurrent http file downloader
 
 # install
 
