@@ -26,15 +26,21 @@ func main()  {
 		width,_:=termutil.TerminalWidth()
 
 		ticker:=time.NewTicker(time.Second)
-
+		isfirst:=true
 		go func() {
 			for{
 				select{
 					case <-ticker.C:
+
+						if !isfirst{
+							termutil.ClearLines(int16(len(ts)))
+						}
 						for _,t:=range ts{
 							var buf string
+							var etaBuf string
 							if t.err!=nil{
 								buf=fmt.Sprintf("error:%s",t.err.Error())
+								etaBuf=""
 							}else if  t.getReadNum()>0{
 								var eta string
 								if t.fileSize<=0 ||  t.getBps()==0{
@@ -42,21 +48,38 @@ func main()  {
 								}else {
 									eta=formatTime((t.fileSize-t.getReadNum())/int64(t.getBps()))
 								}
-								buf=fmt.Sprintf("%s/%s(%.2f%%) ETA %s (%s/s)",formatBytes(t.getReadNum()),formatBytes(t.fileSize),100*float64(t.getReadNum())/float64(t.fileSize),eta,formatBytes(int64(t.getBps())))
+								etaBuf=fmt.Sprintf("%s (%s/s)",eta,formatBytes(int64(t.getBps())))
+								buf=fmt.Sprintf("%s/%s(%.2f%%)",formatBytes(t.getReadNum()),formatBytes(t.fileSize),100*float64(t.getReadNum())/float64(t.fileSize))
 							}else {
 								buf="waiting..."
+								etaBuf=""
 							}
 							count:=cellCount(buf)
-							r:=width-count
-							if r>0{
-								buf+=strings.Repeat(" ",r)
+							etacount:=cellCount(etaBuf)
+							r:=width-etacount-count
+							if r>0 && t.fileSize>0 {
+								buf+="["
+								etaBuf="]"+etaBuf
+
+								ratio:=float64(t.getReadNum())/float64(t.fileSize)
+								r-=2
+								bar:=strings.Repeat(" ",r)
+								c:= int(float64(r)*ratio)
+								progress:=""
+								if c!=0{
+									progress=strings.Repeat("=",c)
+								}
+								bar=strings.Join([]string{progress,">",bar[c+1:]},"")
+								buf=strings.Join([]string{buf,bar,etaBuf},"")
+
 							} else if r<0{
 								buf=buf[:width]
 							}
 							fmt.Println(buf)
 
 						}
-						termutil.ClearLines(int16(len(ts)))
+						isfirst=false
+
 				}
 			}
 		}()
@@ -70,3 +93,4 @@ func main()  {
 		fmt.Println("finished")
 	}
 }
+

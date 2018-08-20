@@ -22,15 +22,15 @@ const (
 func formatBytes(i int64) (result string) {
 	switch {
 	case i >= tib:
-		result = fmt.Sprintf("%.02f TiB", float64(i)/tib)
+		result = fmt.Sprintf("%.2fTB", float64(i)/tib)
 	case i >= gib:
-		result = fmt.Sprintf("%.02f GiB", float64(i)/gib)
+		result = fmt.Sprintf("%.2fGB", float64(i)/gib)
 	case i >= mib:
-		result = fmt.Sprintf("%.02f MiB", float64(i)/mib)
+		result = fmt.Sprintf("%.2fMB", float64(i)/mib)
 	case i >= kib:
-		result = fmt.Sprintf("%.02f KiB", float64(i)/kib)
+		result = fmt.Sprintf("%.2fKB", float64(i)/kib)
 	default:
-		result = fmt.Sprintf("%d B", i)
+		result = fmt.Sprintf("%dB", i)
 	}
 	return
 }

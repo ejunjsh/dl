@@ -70,5 +70,5 @@ func unlockEcho() (err error) {
 }
 
 func ClearLines(linecount int16){
-	fmt.Print("\033[%dA",linecount)
+	fmt.Printf("\033[%dA",linecount)
 }
