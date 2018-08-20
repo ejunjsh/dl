@@ -6,6 +6,7 @@ import (
 	"time"
 	"github.com/ejunjsh/dl/termutil"
 	"strings"
+	"io"
 )
 
 func main()  {
@@ -38,7 +39,7 @@ func main()  {
 						for _,t:=range ts{
 							var buf string
 							var etaBuf string
-							if t.err!=nil{
+							if t.err!=nil&&t.err!=io.EOF{
 								buf=fmt.Sprintf("error:%s",t.err.Error())
 								etaBuf=""
 							}else if  t.getReadNum()>0{
