@@ -70,11 +70,7 @@ func updateTerm(isGetWidth bool, ts []*task, width int) {
 				fileSizeBuf = fmt.Sprintf("%s/%s(%.2f%%)", formatBytes(t.getReadNum()), formatBytes(t.fileSize), 100*float64(t.getReadNum())/float64(t.fileSize))
 			}
 
-			if t.fileSize <= 0 || t.getBps() == 0 {
-				etaBuf = "--"
-			} else {
-				etaBuf = fmt.Sprintf("%s (%s/s)", formatTime((t.fileSize-t.getReadNum())/int64(t.getBps())), formatBytes(int64(t.getBps())))
-			}
+			etaBuf = fmt.Sprintf("%s (%s/s)", t.getETA(), t.getSpeed())
 
 			if isGetWidth || t.fileSize > 0 {
 				r := width - cellCount(fileSizeBuf+etaBuf)

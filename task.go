@@ -85,9 +85,9 @@ loop:
 	}
 
 done:
-		t.err=err
-		close(t.done)
-		t.endTime=time.Now()
+	t.err=err
+	close(t.done)
+	t.endTime=time.Now()
 	return
 }
 
@@ -118,8 +118,19 @@ func (t *task) bps(){
 	}
 }
 
-func (t *task) getBps() float64{
+func (t *task) getSpeed() string{
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	return t.bytePerSecond
+	return formatBytes(int64(t.bytePerSecond))
+}
+
+
+func (t *task) getETA() string{
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	if t.fileSize==0||t.bytePerSecond==0{
+		return "--"
+	}else {
+		return formatTime((t.fileSize-t.getReadNum())/int64(t.bytePerSecond))
+	}
 }
