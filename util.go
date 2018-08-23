@@ -1,15 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"mime"
-	"strings"
-	"path/filepath"
-	"path"
 	"errors"
-	"regexp"
+	"fmt"
 	"gopkg.in/mattn/go-runewidth.v0"
+	"mime"
+	"net/http"
+	"path"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -35,30 +36,30 @@ func formatBytes(i int64) (result string) {
 	return
 }
 
-func formatTime(i int64) string{
-	if i<60{
-		return fmt.Sprintf("%2ds",i)
-	}else if i<3600{
-		s:=i%60
-		m:=i/60
-		if s==0{
-			return fmt.Sprintf("%2dm",m)
+func formatTime(i int64) string {
+	if i < 60 {
+		return fmt.Sprintf("%2ds", i)
+	} else if i < 3600 {
+		s := i % 60
+		m := i / 60
+		if s == 0 {
+			return fmt.Sprintf("%2dm", m)
 		} else {
-			return fmt.Sprintf("%2dm ",m)+formatTime(s)
+			return fmt.Sprintf("%2dm ", m) + formatTime(s)
 		}
 
-	}else {
-		s:=i%3600
-		h:=i/3600
-		if s==0{
-			return fmt.Sprintf("%2dh",h)
+	} else {
+		s := i % 3600
+		h := i / 3600
+		if s == 0 {
+			return fmt.Sprintf("%2dh", h)
 		} else {
-			return fmt.Sprintf("%2dh ",h)+formatTime(s)
+			return fmt.Sprintf("%2dh ", h) + formatTime(s)
 		}
 	}
 }
 
-var errNoFilename=errors.New("no filename could be determined")
+var errNoFilename = errors.New("no filename could be determined")
 
 func guessFilename(resp *http.Response) (string, error) {
 	filename := resp.Request.URL.Path
@@ -88,4 +89,17 @@ func cellCount(s string) int {
 		n -= runewidth.StringWidth(sm)
 	}
 	return n
+}
+
+func getLimitFromUrl(url string) (int64, string) {
+	s := strings.Split(url, ":")
+	if len(s) >= 2 {
+		i, err := strconv.ParseInt(s[0], 0, 0)
+		if err != nil {
+			return -1, url
+		} else {
+			return i, strings.Join(s[1:], ":")
+		}
+	}
+	return -1, url
 }

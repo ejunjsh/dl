@@ -11,7 +11,10 @@ import (
 
 func main() {
 	if len(os.Args) == 1 {
-		fmt.Println("usage: dl [url...]")
+		usage := `usage: dl [[rate limit]:url...]
+rate limit: limit the speed,unit is KB
+url...: urls you want to download`
+		fmt.Println(usage)
 		return
 	} else {
 		ts := make([]*task, len(os.Args)-1)
@@ -51,6 +54,8 @@ func main() {
 				<-t.done
 			}
 		}
+
+		time.Sleep(time.Second)
 
 		fmt.Println("finished")
 	}

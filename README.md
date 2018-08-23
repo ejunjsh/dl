@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ejunjsh/dl.svg?branch=master)](https://travis-ci.org/ejunjsh/dl)
 
-a concurrent http file downloader
+a concurrent http file downloader,support rate limit
 
 # install
 
@@ -10,7 +10,10 @@ a concurrent http file downloader
 
 # usage
 
-    dl [url...]
+    # dl
+    usage: dl [[rate limit]:url...]
+    rate limit: limit the speed,unit is KB
+    url...: urls you want to download
 
 # example
 

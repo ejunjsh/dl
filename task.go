@@ -1,97 +1,123 @@
 package main
 
 import (
-	"io"
-	"time"
-	"sync"
-	"sync/atomic"
-	"os"
-	"net/http"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type task struct {
-	done chan struct{}
-	src io.ReadCloser
-	dst io.WriteCloser
+	done          chan struct{}
+	src           io.ReadCloser
+	dst           io.WriteCloser
 	bytePerSecond float64
-	err error
-	startTime time.Time
-	endTime time.Time
-	mutex sync.Mutex
-	readNum int64
-	fileSize int64
-	filename string
-	buffer []byte
-	client *client
+	err           error
+	startTime     time.Time
+	endTime       time.Time
+	mutex         sync.Mutex
+	readNum       int64
+	fileSize      int64
+	filename      string
+	buffer        []byte
+	lim           *ratelimiter
+	url           string
 }
 
-func (t *task) getReadNum() int64{
+func (t *task) getReadNum() int64 {
 	if t == nil {
 		return 0
 	}
 	return atomic.LoadInt64(&t.readNum)
 }
 
-func newTask(url string) *task{
-	return &task{client:newClient(url),done:make(chan struct{},1),buffer:make([]byte,32*1024)}
+func newTask(url string) *task {
+	lim, url := getLimitFromUrl(url)
+	return &task{url: url, done: make(chan struct{}, 1), buffer: make([]byte, 32*1024), lim: &ratelimiter{lim: lim * 1000}}
 }
 
-func (t *task) start(){
+func (t *task) start() {
+	defer func() {
+		if err := recover(); err != nil {
+			switch x := err.(type) {
+			case string:
+				t.err = errors.New(x)
+			case error:
+				t.err = x
+			default:
+				t.err = errors.New("Unknow panic")
+			}
+			close(t.done)
+			t.endTime = time.Now()
+		}
+	}()
 	var dst *os.File
-	var rn,wn int
+	var rn, wn int
 	var filename string
-	req,_:= http.NewRequest("GET",t.client.url,nil)
-	rep,err:= t.client._client.Do(req)
-	if err!=nil{
+	req, _ := http.NewRequest("GET", t.url, nil)
+	c := &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		},
+	}
+	rep, err := c.Do(req)
+	if err != nil {
 		goto done
-	}else if rep.StatusCode!=200{
-		err=errors.New(fmt.Sprintf("wrong response %d",rep.StatusCode))
+	} else if rep.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("wrong response %d", rep.StatusCode))
 		goto done
 	}
 
 	filename, err = guessFilename(rep)
 
-	dst,err=os.Create(filename)
-	if err!=nil{
+	dst, err = os.Create(filename)
+	if err != nil {
 		goto done
 	}
-	t.dst=dst
-	t.src=rep.Body
-	t.fileSize=rep.ContentLength
+	t.dst = dst
+	t.src = rep.Body
+	t.fileSize = rep.ContentLength
 
 	go t.bps()
 
-	t.startTime=time.Now()
+	t.startTime = time.Now()
 
 loop:
-	rn,err=t.src.Read(t.buffer)
 
-	if err!=nil||rn==0{
+	if t.lim.lim > 0 {
+		t.lim.wait(t.readNum)
+	}
+
+	rn, err = t.src.Read(t.buffer)
+
+	if err != nil || rn == 0 {
 		goto done
 	}
 
-	wn,err=t.dst.Write(t.buffer[:rn])
+	wn, err = t.dst.Write(t.buffer[:rn])
 
-	if err!=nil{
+	if err != nil {
 		goto done
-	} else if rn!=wn {
+	} else if rn != wn {
 		err = io.ErrShortWrite
 		goto done
-	}else{
-		atomic.AddInt64(&t.readNum,int64(rn))
+	} else {
+		atomic.AddInt64(&t.readNum, int64(rn))
 		goto loop
 	}
 
 done:
-	t.err=err
+	t.err = err
 	close(t.done)
-	t.endTime=time.Now()
+	t.endTime = time.Now()
 	return
 }
 
-func (t *task) bps(){
+func (t *task) bps() {
 	var prev int64
 	then := t.startTime
 
@@ -118,19 +144,18 @@ func (t *task) bps(){
 	}
 }
 
-func (t *task) getSpeed() string{
+func (t *task) getSpeed() string {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	return formatBytes(int64(t.bytePerSecond))
 }
 
-
-func (t *task) getETA() string{
+func (t *task) getETA() string {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	if t.fileSize==0||t.bytePerSecond==0{
+	if t.fileSize == 0 || t.bytePerSecond == 0 {
 		return "--"
-	}else {
-		return formatTime((t.fileSize-t.getReadNum())/int64(t.bytePerSecond))
+	} else {
+		return formatTime((t.fileSize - t.getReadNum()) / int64(t.bytePerSecond))
 	}
 }
