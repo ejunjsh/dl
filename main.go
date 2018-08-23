@@ -88,7 +88,7 @@ func updateTerm(isGetWidth bool, ts []*task, width int) {
 					bar := strings.Repeat(" ", r)
 					c := int(float64(r) * ratio)
 					progress := ""
-					if c != 0 {
+					if c > 0 {
 						progress = strings.Repeat("=", c)
 					}
 					bar = strings.Join([]string{progress, ">", bar[c+1:]}, "")

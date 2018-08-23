@@ -58,6 +58,7 @@ func (t *task) start() {
 	var dst *os.File
 	var rn, wn int
 	var filename string
+	var fi os.FileInfo
 	req, _ := http.NewRequest("GET", t.url, nil)
 	c := &http.Client{
 		Transport: &http.Transport{
@@ -74,10 +75,42 @@ func (t *task) start() {
 
 	filename, err = guessFilename(rep)
 
-	dst, err = os.Create(filename)
-	if err != nil {
-		goto done
+	fi, err = os.Stat(filename)
+
+	if err == nil {
+		if !fi.IsDir() {
+			rep.Body.Close()
+			req, _ := http.NewRequest("GET", t.url, nil)
+			req.Header.Set("Range", fmt.Sprintf("bytes=%d", fi.Size()))
+			rep, err = c.Do(req)
+			if err != nil {
+				goto done
+			} else if rep.StatusCode == 416 {
+				rep.Body.Close()
+				req, _ = http.NewRequest("GET", t.url, nil)
+				rep, err = c.Do(req)
+			} else if rep.StatusCode != 200 {
+				err = errors.New(fmt.Sprintf("wrong response %d", rep.StatusCode))
+				goto done
+			}
+			if rep.Header.Get("Accept-Ranges") == "bytes" {
+				dst, err = os.OpenFile(filename, os.O_RDWR, 0666)
+				if err != nil {
+					goto done
+				}
+				dst.Seek(fi.Size(), os.SEEK_SET)
+				t.readNum = fi.Size()
+			}
+		}
 	}
+
+	if dst == nil {
+		dst, err = os.Create(filename)
+		if err != nil {
+			goto done
+		}
+	}
+
 	t.dst = dst
 	t.src = rep.Body
 	t.fileSize = rep.ContentLength
