@@ -91,7 +91,11 @@ func updateTerm(isGetWidth bool, ts []*task, width int) {
 					if c > 0 {
 						progress = strings.Repeat("=", c)
 					}
-					bar = strings.Join([]string{progress, ">", bar[c+1:]}, "")
+					if c+1<len(bar){
+						bar = strings.Join([]string{progress, ">", bar[c+1:]}, "")
+					}else {
+						bar = strings.Join([]string{progress, ">"}, "")
+					}
 					buf = strings.Join([]string{fileSizeBuf, bar, etaBuf}, "")
 
 				} else if r < 0 {

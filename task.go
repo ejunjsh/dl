@@ -68,7 +68,7 @@ func (t *task) start() {
 	rep, err := c.Do(req)
 	if err != nil {
 		goto done
-	} else if rep.StatusCode != 200 {
+	} else if rep.StatusCode != 200 &&rep.StatusCode != 206 {
 		err = errors.New(fmt.Sprintf("wrong response %d", rep.StatusCode))
 		goto done
 	}
@@ -80,25 +80,25 @@ func (t *task) start() {
 	if err == nil {
 		if !fi.IsDir() {
 			rep.Body.Close()
+			if fi.Size()==rep.ContentLength{
+				err=errors.New("File is existing! ")
+				goto done
+			}
 			req, _ := http.NewRequest("GET", t.url, nil)
-			req.Header.Set("Range", fmt.Sprintf("bytes=%d", fi.Size()))
+			req.Header.Set("Range", fmt.Sprintf("bytes=%d-", fi.Size()))
 			rep, err = c.Do(req)
 			if err != nil {
 				goto done
-			} else if rep.StatusCode == 416 {
-				rep.Body.Close()
-				req, _ = http.NewRequest("GET", t.url, nil)
-				rep, err = c.Do(req)
-			} else if rep.StatusCode != 200 {
+			} else if rep.StatusCode != 200&&rep.StatusCode != 206 {
 				err = errors.New(fmt.Sprintf("wrong response %d", rep.StatusCode))
 				goto done
 			}
-			if rep.Header.Get("Accept-Ranges") == "bytes" {
+			if rep.Header.Get("Accept-Ranges") == "bytes" ||rep.Header.Get("Content-Range") != ""{
 				dst, err = os.OpenFile(filename, os.O_RDWR, 0666)
 				if err != nil {
 					goto done
 				}
-				dst.Seek(fi.Size(), os.SEEK_SET)
+				dst.Seek(0, os.SEEK_END)
 				t.readNum = fi.Size()
 			}
 		}
@@ -113,7 +113,12 @@ func (t *task) start() {
 
 	t.dst = dst
 	t.src = rep.Body
-	t.fileSize = rep.ContentLength
+	if fi!=nil{
+		t.fileSize = rep.ContentLength+fi.Size()
+	}else {
+		t.fileSize = rep.ContentLength
+	}
+
 
 	go t.bps()
 
@@ -127,20 +132,19 @@ loop:
 
 	rn, err = t.src.Read(t.buffer)
 
-	if err != nil || rn == 0 {
-		goto done
-	}
+	if rn > 0 {
 
-	wn, err = t.dst.Write(t.buffer[:rn])
+		wn, err = t.dst.Write(t.buffer[:rn])
 
-	if err != nil {
-		goto done
-	} else if rn != wn {
-		err = io.ErrShortWrite
-		goto done
-	} else {
-		atomic.AddInt64(&t.readNum, int64(rn))
-		goto loop
+		if err != nil {
+			goto done
+		} else if rn != wn {
+			err = io.ErrShortWrite
+			goto done
+		} else {
+			atomic.AddInt64(&t.readNum, int64(rn))
+			goto loop
+		}
 	}
 
 done:
