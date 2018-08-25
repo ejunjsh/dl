@@ -19,25 +19,25 @@ a concurrent http file downloader,support rate limit, resume from break-point.
 
 ## concurrent download
 
-    ➜ dl https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg
-    172.06MB/607.13MB(28.34%)[=========>                         ] 4m 51s (1.49MB/s)
-    143.66MB/607.13MB(23.66%)[=======>                         ] 9m 37s (821.30KB/s)
-    139.26MB/607.13MB(22.94%)[=======>                         ] 9m 27s (844.47KB/s)
+    ➜ dl https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg http://mirrors.neusoft.edu.cn/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1804.iso
+      ideaIU-2018.2.1.dmg |607.13MB[>                               ]26m13s|384.02KB/s
+      CentOS-7-x86_64-Mini|906.00MB[===>                            ] 3m22s|  3.96MB/s
 
 ## rate limit
 
 below example shows the download speed that is limited in 200KB
 
     ➜ dl 200:https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg
-    172.06MB/607.13MB(28.34%)[=========>                         ] 4m 51s (198KB/s)
+    ideaIU-2018.2.1.dmg |607.13MB[===>                            ]46m14s|199.34KB/s
 
 ## resume from break-point
 
 below shows two commands,the second command resume from the first command
 
     ➜ dl https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg
-    314.74MB/607.13MB(51.84%)[=================>               ] 6m 15s (798.37KB/s)
+    ideaIU-2018.2.1.dmg |607.13MB[====>                           ] 5m 1s|  1.73MB/s
+    ^C
 
     ➜ dl https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg
-    319.59MB/607.13MB(52.64%)[===================>                 ] 0s (318.32MB/s)
+    ideaIU-2018.2.1.dmg |607.13MB[=====>                          ] 3m17s|  2.57MB/s
 

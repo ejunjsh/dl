@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"strings"
 )
 
 type task struct {
@@ -26,6 +27,7 @@ type task struct {
 	buffer        []byte
 	lim           *ratelimiter
 	url           string
+	isResume 	  bool
 }
 
 func (t *task) getReadNum() int64 {
@@ -100,6 +102,7 @@ func (t *task) start() {
 				}
 				dst.Seek(0, os.SEEK_END)
 				t.readNum = fi.Size()
+				t.isResume=true
 			}
 		}
 	}
@@ -113,7 +116,8 @@ func (t *task) start() {
 
 	t.dst = dst
 	t.src = rep.Body
-	if rep.ContentLength>0 && fi!=nil{
+	t.filename=filename
+	if rep.ContentLength>0 &&t.isResume && fi!=nil{
 		t.fileSize = rep.ContentLength+fi.Size()
 	}else {
 		t.fileSize = rep.ContentLength
@@ -191,8 +195,14 @@ func (t *task) getETA() string {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	if t.fileSize == 0 || t.bytePerSecond == 0 {
-		return "--"
+		return "      "
 	} else {
-		return formatTime((t.fileSize - t.getReadNum()) / int64(t.bytePerSecond))
+		b:= formatTime((t.fileSize - t.getReadNum()) / int64(t.bytePerSecond))
+		if len(b)>6{
+			b=b[:6]
+		}else if len(b)<6{
+			b=strings.Join([]string{strings.Repeat(" ",6-len(b)),b},"")
+		}
+		return b
 	}
 }

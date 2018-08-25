@@ -23,15 +23,15 @@ const (
 func formatBytes(i int64) (result string) {
 	switch {
 	case i >= tib:
-		result = fmt.Sprintf("%.2fTB", float64(i)/tib)
+		result = fmt.Sprintf("%6.2fTB", float64(i)/tib)
 	case i >= gib:
-		result = fmt.Sprintf("%.2fGB", float64(i)/gib)
+		result = fmt.Sprintf("%6.2fGB", float64(i)/gib)
 	case i >= mib:
-		result = fmt.Sprintf("%.2fMB", float64(i)/mib)
+		result = fmt.Sprintf("%6.2fMB", float64(i)/mib)
 	case i >= kib:
-		result = fmt.Sprintf("%.2fKB", float64(i)/kib)
+		result = fmt.Sprintf("%6.2fKB", float64(i)/kib)
 	default:
-		result = fmt.Sprintf("%dB", i)
+		result = fmt.Sprintf("%7dB", i)
 	}
 	return
 }
@@ -45,7 +45,7 @@ func formatTime(i int64) string {
 		if s == 0 {
 			return fmt.Sprintf("%2dm", m)
 		} else {
-			return fmt.Sprintf("%2dm ", m) + formatTime(s)
+			return fmt.Sprintf("%2dm", m) + formatTime(s)
 		}
 
 	} else {
@@ -54,7 +54,7 @@ func formatTime(i int64) string {
 		if s == 0 {
 			return fmt.Sprintf("%2dh", h)
 		} else {
-			return fmt.Sprintf("%2dh ", h) + formatTime(s)
+			return fmt.Sprintf("%2dh", h) + formatTime(s)
 		}
 	}
 }
