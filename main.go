@@ -77,7 +77,7 @@ func updateTerm(isGetWidth bool, ts []*task, width int) {
 
 			etaBuf = fmt.Sprintf("%s (%s/s)", t.getETA(), t.getSpeed())
 
-			if isGetWidth || t.fileSize > 0 {
+			if isGetWidth && t.fileSize > 0 {
 				r := width - cellCount(fileSizeBuf+etaBuf)
 				if r > 4 {
 					fileSizeBuf += "["

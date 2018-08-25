@@ -113,7 +113,7 @@ func (t *task) start() {
 
 	t.dst = dst
 	t.src = rep.Body
-	if fi!=nil{
+	if rep.ContentLength>0 && fi!=nil{
 		t.fileSize = rep.ContentLength+fi.Size()
 	}else {
 		t.fileSize = rep.ContentLength
