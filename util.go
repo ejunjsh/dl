@@ -33,6 +33,11 @@ func formatBytes(i int64) (result string) {
 	default:
 		result = fmt.Sprintf("%7dB", i)
 	}
+
+	if len(result)>8{
+		result=strings.Join([]string{result[:6],result[7:]},"")
+	}
+
 	return
 }
 
