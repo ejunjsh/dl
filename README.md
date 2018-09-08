@@ -11,7 +11,8 @@ a concurrent http file downloader,support rate limit, resume from break-point.
 # usage
 
     # dl
-    usage: dl [[rate limit]:url...]
+    usage: dl [[rate limit:]url...]
+    -h: specify your http header,format is "key:value|key2:value2"
     rate limit: limit the speed,unit is KB
     url...: urls you want to download
 
@@ -40,4 +41,14 @@ below shows two commands,the second command resume from the first command
 
     ➜ dl https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg
     ideaIU-2018.2.1.dmg |607.13MB[=====>                          ] 3m17s|  2.57MB/s
+
+## customize header
+
+    dl -h aaa:bbb  https://download.jetbrains.com/idea/ideaIU-2018.2.1.dmg
+
+above download will use the "aaa:bbb" as its header
+
+## proxy
+
+the command supports `HTTP_PROXY` and `HTTPS_PROXY` environment parameters to setup proxy.
 

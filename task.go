@@ -28,6 +28,7 @@ type task struct {
 	lim           *ratelimiter
 	url           string
 	isResume 	  bool
+	header  map[string]string
 }
 
 func (t *task) getReadNum() int64 {
@@ -37,9 +38,9 @@ func (t *task) getReadNum() int64 {
 	return atomic.LoadInt64(&t.readNum)
 }
 
-func newTask(url string) *task {
+func newTask(url string,h map[string]string) *task {
 	lim, url := getLimitFromUrl(url)
-	return &task{url: url, done: make(chan struct{}, 1), buffer: make([]byte, 32*1024), lim: &ratelimiter{lim: lim * 1000}}
+	return &task{url: url, done: make(chan struct{}, 1), buffer: make([]byte, 32*1024), lim: &ratelimiter{lim: lim * 1000},header:h}
 }
 
 func (t *task) start() {
@@ -62,6 +63,11 @@ func (t *task) start() {
 	var filename string
 	var fi os.FileInfo
 	req, _ := http.NewRequest("GET", t.url, nil)
+	if t.header!=nil{
+		for k,v:=range t.header{
+			req.Header.Set(k,v)
+		}
+	}
 	c := &http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -83,10 +89,9 @@ func (t *task) start() {
 		if !fi.IsDir() {
 			rep.Body.Close()
 			if fi.Size()==rep.ContentLength{
-				err=errors.New("File is existing! ")
+				err=errors.New("File is downloaded! ")
 				goto done
 			}
-			req, _ := http.NewRequest("GET", t.url, nil)
 			req.Header.Set("Range", fmt.Sprintf("bytes=%d-", fi.Size()))
 			rep, err = c.Do(req)
 			if err != nil {

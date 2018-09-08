@@ -7,19 +7,24 @@ import (
 	"os"
 	"strings"
 	"time"
+	"flag"
 )
 
 func main() {
 	if len(os.Args) == 1 {
-		usage := `usage: dl [[rate limit]:url...]
+		usage := `usage: dl [-h <header>] [[rate limit:]url...]
+-h: specify your http header,format is "key:value|key2:value2"
 rate limit: limit the speed,unit is KB
 url...: urls you want to download`
 		fmt.Println(usage)
 		return
 	} else {
-		ts := make([]*task, len(os.Args)-1)
-		for i, url := range os.Args[1:] {
-			t := newTask(url)
+		header:=flag.String("h","","http header")
+		flag.Parse()
+		m:=parseHeaderFromString(*header)
+		ts := make([]*task, len(flag.Args()))
+		for i, url := range flag.Args() {
+			t := newTask(url,m)
 			if t != nil {
 				go t.start()
 				ts[i] = t
