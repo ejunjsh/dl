@@ -50,5 +50,5 @@ above download will use the "aaa:bbb" as its header
 
 ## proxy
 
-the command supports `HTTP_PROXY` and `HTTPS_PROXY` environment parameters to setup proxy.
+support `HTTP_PROXY` or `HTTPS_PROXY` environment parameter to setup proxy.
 
