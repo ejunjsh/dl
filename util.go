@@ -115,7 +115,7 @@ func parseHeaderFromString(h string) (m map[string]string){
 		return
 	}
 	m=make(map[string]string)
-	sss:=strings.Split(h,"|")
+	sss:=strings.Split(h,"&")
 	for _,ss:=range sss{
 		s:=strings.Split(ss,":")
 		m[s[0]]=s[1]

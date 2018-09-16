@@ -12,7 +12,7 @@ a concurrent http file downloader,support rate limit, resume from break-point.
 
     # dl
     usage: dl [[rate limit:]url...]
-    -h: specify your http header,format is "key:value|key2:value2"
+    -h: specify your http header,format is "key:value&key2:value2"
     rate limit: limit the speed,unit is KB
     url...: urls you want to download
 
