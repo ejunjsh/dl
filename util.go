@@ -109,16 +109,17 @@ func getLimitFromUrl(url string) (int64, string) {
 	return -1, url
 }
 
-func parseHeaderFromString(h string) (m map[string]string){
-	if h=="" {
+func parseHeaderFromStringSlice(h []string) (m map[string]string){
+	if h==nil {
 		m=nil
 		return
 	}
 	m=make(map[string]string)
-	sss:=strings.Split(h,"&")
-	for _,ss:=range sss{
-		s:=strings.Split(ss,":")
-		m[s[0]]=s[1]
+	for _,ss:=range h{
+		if strings.Contains(ss,":"){
+			s:=strings.Split(ss,":")
+			m[s[0]]=s[1]
+		}
 	}
 	return
 }

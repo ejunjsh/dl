@@ -7,23 +7,38 @@ import (
 	"os"
 	"strings"
 	"time"
-	"flag"
+	"github.com/urfave/cli"
+	"log"
 )
 
-func main() {
-	if len(os.Args) == 1 {
-		usage := `usage: dl [-h <header>] [[rate limit:]url...]
--h: specify your http header,format is "key:value|key2:value2"
+func printUsage(){
+	usage := `usage: dl [--header <header> [ --header <header>]] [[rate limit:]url...]
+-h: specify your http header,format is "key:value"
 rate limit: limit the speed,unit is KB
 url...: urls you want to download`
-		fmt.Println(usage)
-		return
-	} else {
-		header:=flag.String("h","","http header")
-		flag.Parse()
-		m:=parseHeaderFromString(*header)
-		ts := make([]*task, len(flag.Args()))
-		for i, url := range flag.Args() {
+	fmt.Println(usage)
+}
+
+func main() {
+	app := cli.NewApp()
+	app.Flags = []cli.Flag{
+		cli.StringSliceFlag{
+			Name:  "header",
+		},
+	}
+	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
+		printUsage()
+	}
+	app.Action = func(c *cli.Context) error {
+		if c.NArg()==0{
+			printUsage()
+			return nil
+		}
+
+		headers:=c.StringSlice("header")
+		m:=parseHeaderFromStringSlice(headers)
+		ts := make([]*task, c.NArg())
+		for i, url := range c.Args() {
 			t := newTask(url,m)
 			if t != nil {
 				go t.start()
@@ -63,6 +78,12 @@ url...: urls you want to download`
 		time.Sleep(time.Second)
 
 		fmt.Println("finished")
+
+		return nil
+	}
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
