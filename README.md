@@ -11,10 +11,11 @@ a concurrent http file downloader,support rate limit, resume from break-point.
 # usage
 
     # dl
-    usage: dl [-h <header> [ -h <header>]] [[rate limit:]url...]
-    -h: specify your http header,format is "key:value"
+    usage: dl [--header <header> [ --header <header>]] [[rate limit:]url...]
+    --header: specify your http header,format is "key:value"
     rate limit: limit the speed,unit is KB
     url...: urls you want to download
+
 
 # example
 

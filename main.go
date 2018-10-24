@@ -13,7 +13,7 @@ import (
 
 func printUsage(){
 	usage := `usage: dl [--header <header> [ --header <header>]] [[rate limit:]url...]
--h: specify your http header,format is "key:value"
+--header: specify your http header,format is "key:value"
 rate limit: limit the speed,unit is KB
 url...: urls you want to download`
 	fmt.Println(usage)
